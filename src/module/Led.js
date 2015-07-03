@@ -66,17 +66,32 @@
     }
 
   });
-
+  var stop;
   proto.on = function () {
+    clearInterval(stop) 
     this._pin.value = this._onValue;
   };
 
   proto.off = function () {
+    clearInterval(stop)
     this._pin.value = this._offValue;
   };
 
-  proto.toggle = function () {
+  proto.toggle = function (callback) {
+    clearInterval(stop)
     this._pin.value = 1 - this._pin.value;
+    	
+  };
+  
+  proto.blink = function (para) {
+    clearInterval(stop)
+    var self = this;
+    var time = para?para:1000;	
+
+    stop = setInterval(function(){
+	self._pin.value  = !self._pin.value
+    },time);
+
   };
 
   Led.SOURCE_DRIVE = 0;
