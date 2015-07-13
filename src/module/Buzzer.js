@@ -148,21 +148,61 @@
     this._board.sendSysex(BUZZER_MESSAGE[0], [BUZZER_MESSAGE[1], this._pin.number]
       .concat(freqData).concat(duration));
   };
-
+  var start,remain,t,durationsArray,Note,time;
   proto.play = function (notes, tempos) {
+    start = new Date();
     var self = this,
       len = notes.length,
       durations = (util.isArray(tempos) ? tempos : []).map(function (t) {
         return 1000 / t;
       });
-
+    Note = notes; 
+    durationsArray  = durations;	
     for (var i = 0; i < len; i++) {
-      setTimeout((function (d) {
+      t = setTimeout((function (d) {
         return function () {
           self.tone(FREQUENCY[notes[d].toUpperCase()], durations[d]);
         };
-      }(i)), calculateDelay(i, durations));
+      }(i)), calculateDelay(i, durations));	
     }
+  };
+  proto.pause = function () {
+    this.stop();
+    console.log(Note.length);
+    var remain = calculateDelay(Note.length,durationsArray);
+    time = (new Date() -start);
+    console.log(time);
+    //durationsArray[now] = remain;
+  };
+  proto.stop = function () {
+    var id = window.setTimeout(null,0);
+    while (id--) 
+    {
+        window.clearTimeout(id);
+    }
+  };
+  proto.resume = function () {
+    var self = this;
+    var l = 0;
+    var now = 0;
+    for (var i = 0; i<Note.length ; i++ ){
+	l += calculateDelay(i,durationsArray);
+        if (l > time){
+            time = l -time;
+	    now = i;
+            break;	
+	}
+    }
+    durationsArray[now] = time;
+    console.log(durationsArray); 
+    for (var i = now; i < Note.length; i++) {
+      var r = setTimeout((function (d) {
+        return function () {
+          self.tone(FREQUENCY[Note[d].toUpperCase()], durationsArray[d]);
+        };
+      }(i)), calculateDelay(i, durationsArray));	
+    }
+
   };
 
   Buzzer.FREQUENCY = FREQUENCY;
