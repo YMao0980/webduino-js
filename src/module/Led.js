@@ -18,7 +18,7 @@
     this._pin = pin;
     this._driveMode = driveMode || Led.SOURCE_DRIVE;
     this._supportsPWM = undefined;
-    this.stop = undefined;
+    this.stop = null;
     if (this._driveMode === Led.SOURCE_DRIVE) {
       this._onValue = 1;
       this._offValue = 0;
@@ -104,22 +104,30 @@
   };
   
   proto.blink = function (para,callback) {
-    this.stopblink()
+    this.stopblink();
+    var time = para?para:1000;	
+    this._blink(time,callback); 
+
+  };
+
+  proto._blink = function (para,callback) {
     var self = this;
     var time = para?para:1000;	
-
     this.stop = setTimeout(function(){
 	self._pin.value = 1 - self._pin.value;
 	if (typeof callback === 'function') {
-      		checkPinState(this, this._pin, this._pin.value, callback);
+      		checkPinState(self, self._pin, self._pin.value, callback);
    	}
- 	self.blink(para);
+ 	self._blink(time,callback);
     },time);
 
   };
  		
   proto.stopblink = function(callback){
-     clearTimeout(this.stop);
+     if(this.stop != null){
+         clearTimeout(this.stop);
+         this.stop == null;
+     }
      if (typeof callback === 'function') {
       checkPinState(this, this._pin, this._pin.value, callback);
     }
