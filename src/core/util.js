@@ -7,13 +7,14 @@
 }(function (scope) {
   'use strict';
 
+  var isBrowser = typeof exports === 'undefined';
+
   var objProto = Object.prototype,
     owns = objProto.hasOwnProperty,
     toStr = objProto.toString;
 
   function isFn(value) {
-    var isAlert = typeof window !== 'undefined' && value === window.alert;
-    return isAlert || '[object Function]' === toStr.call(value);
+    return typeof value === 'function';
   }
 
   function isObject(value) {
@@ -91,12 +92,23 @@
     return target;
   }
 
+  function parseURL(str) {
+    if (isBrowser) {
+      var url = document.createElement('a');
+      url.href = str;
+      return url;
+    } else {
+      return require('url').parse(str);
+    }
+  }
+
   scope.util = {
     isFn: isFn,
     isFunction: isFn,
     isObject: isObject,
     isHash: isHash,
     isArray: isArray,
-    extend: extend
+    extend: extend,
+    parseURL: parseURL
   };
 }));

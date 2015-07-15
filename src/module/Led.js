@@ -18,7 +18,7 @@
     this._pin = pin;
     this._driveMode = driveMode || Led.SOURCE_DRIVE;
     this._supportsPWM = undefined;
-
+    this.stop = undefined;
     if (this._driveMode === Led.SOURCE_DRIVE) {
       this._onValue = 1;
       this._offValue = 0;
@@ -36,6 +36,14 @@
       board.setDigitalPinMode(pin.number, Pin.DOUT);
       this._supportsPWM = false;
     }
+  }
+
+  function checkPinState(self, pin, state, callback) {
+    self._board.queryPinState(pin, function (pin) {
+      if (pin.state === state) {
+        callback.call(self);
+      }
+    });
   }
 
   Led.prototype = proto = Object.create(Module.prototype, {
@@ -66,34 +74,57 @@
     }
 
   });
-  var stop;
-  proto.on = function () {
-    clearInterval(stop) 
+
+
+  proto.on = function (callback) {
+    this.stopblink()
     this._pin.value = this._onValue;
+    if (typeof callback === 'function') {
+      checkPinState(this, this._pin, this._pin.value, callback);
+    }
   };
 
-  proto.off = function () {
-    clearInterval(stop)
+
+  proto.off = function (callback) {
+
+    this.stopblink()
     this._pin.value = this._offValue;
+    if (typeof callback === 'function') {
+      checkPinState(this, this._pin, this._pin.value, callback);
+    }
   };
 
   proto.toggle = function (callback) {
-    clearInterval(stop)
+    this.stopblink()
     this._pin.value = 1 - this._pin.value;
+    if (typeof callback === 'function') {
+      checkPinState(this, this._pin, this._pin.value, callback);
+    }
     	
   };
   
-  proto.blink = function (para) {
-    clearInterval(stop)
+  proto.blink = function (para,callback) {
+    this.stopblink()
     var self = this;
     var time = para?para:1000;	
 
-    stop = setInterval(function(){
-	self._pin.value  = !self._pin.value
+    this.stop = setTimeout(function(){
+	self._pin.value = 1 - self._pin.value;
+	if (typeof callback === 'function') {
+      		checkPinState(this, this._pin, this._pin.value, callback);
+   	}
+ 	self.blink(para);
     },time);
 
   };
-
+ 		
+  proto.stopblink = function(callback){
+     clearTimeout(this.stop);
+     if (typeof callback === 'function') {
+      checkPinState(this, this._pin, this._pin.value, callback);
+    }
+  }
+  
   Led.SOURCE_DRIVE = 0;
   Led.SYNC_DRIVE = 1;
 
